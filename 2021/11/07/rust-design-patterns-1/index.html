@@ -14,7 +14,7 @@
 <meta property="og:description" content="2. Idioms2.1. Use borrowed types for arguments參數優先使用borrowed type，而非borrowing the owned type，避免多一層間接的使用，也更能被廣泛使用，像是：   使用&amp;str而非&amp;String 使用&amp;[T] 而非 &amp;Vec&lt;T&gt; 使用&amp;T 而非 &amp;Box&lt;T">
 <meta property="og:locale" content="zh_TW">
 <meta property="article:published_time" content="2021-11-07T13:16:15.000Z">
-<meta property="article:modified_time" content="2021-11-08T12:27:56.230Z">
+<meta property="article:modified_time" content="2021-11-09T13:04:51.553Z">
 <meta property="article:author" content="James Chiang">
 <meta property="article:tag" content="rust">
 <meta name="twitter:card" content="summary">
@@ -100,7 +100,7 @@
 <ul>
 <li>使用<code>&amp;str</code>而非<code>&amp;String</code></li>
 <li>使用<code>&amp;[T]</code> 而非 <code>&amp;Vec&lt;T&gt;</code></li>
-<li>使用<code>&amp;T</code> 而非 <code>&amp;Box&lt;T&gt;</code></li>
+<li>使用<code>&amp;T</code> 而非 <code>&amp;Box&lt;T&gt;</code><span id="more"></span></li>
 </ul>
 <p>例如下方的<code>three_vowels2</code>可以更好的支援String以及str兩種型態</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">three_vowels</span></span>(word: &amp;<span class="built_in">String</span>) -&gt; <span class="built_in">bool</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">three_vowels2</span></span>(word: &amp;<span class="built_in">str</span>) -&gt; <span class="built_in">bool</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">  <span class="keyword">let</span> s = <span class="string">&quot;str&quot;</span>.to_string();</span><br><span class="line">  three_vowels(&amp;s);</span><br><span class="line">  <span class="comment">// not working three_vowels(&quot;string&quot;);</span></span><br><span class="line">  three_vowels2(&amp;s);</span><br><span class="line">  three_vowels2(<span class="string">&quot;string&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -142,6 +142,20 @@
   </div>
   
     
+<nav id="article-nav">
+  
+    <a href="/2021/11/08/rust-design-patterns-2/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Rust Design Pattern 讀後整理 - Idioms(下)
+        
+      </div>
+    </a>
+  
+  
+</nav>
+
   
 </article>
 
@@ -187,6 +201,10 @@
     <h3 class="widget-title">最新文章</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2021/11/08/rust-design-patterns-2/">Rust Design Pattern 讀後整理 - Idioms(下)</a>
+          </li>
         
           <li>
             <a href="/2021/11/07/rust-design-patterns-1/">Rust Design Pattern 讀後整理 - Idioms(上)</a>

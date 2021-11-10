@@ -71,6 +71,51 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-rust-design-patterns-2" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/11/08/rust-design-patterns-2/" class="article-date">
+  <time class="dt-published" datetime="2021-11-08T12:36:02.000Z" itemprop="datePublished">2021-11-08</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/11/08/rust-design-patterns-2/">Rust Design Pattern 讀後整理 - Idioms(下)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="2-Idioms"><a href="#2-Idioms" class="headerlink" title="2. Idioms"></a>2. Idioms</h1><h2 id="2-8-On-Stack-Dynamic-Dispatch"><a href="#2-8-On-Stack-Dynamic-Dispatch" class="headerlink" title="2.8. On-Stack Dynamic Dispatch"></a>2.8. On-Stack Dynamic Dispatch</h2><p>透過提前宣告多個不同型態的變數來達成On-Stack的動態分配</p>
+        
+          <p class="article-more-link">
+            <a href="/2021/11/08/rust-design-patterns-2/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://adks3489.github.io/2021/11/08/rust-design-patterns-2/" data-id="ckvqnek6m0000qojqaahsgxrn" data-title="Rust Design Pattern 讀後整理 - Idioms(下)" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/rust/" rel="tag">rust</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-rust-design-patterns-1" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/11/07/rust-design-patterns-1/" class="article-date">
@@ -97,35 +142,12 @@
 <ul>
 <li>使用<code>&amp;str</code>而非<code>&amp;String</code></li>
 <li>使用<code>&amp;[T]</code> 而非 <code>&amp;Vec&lt;T&gt;</code></li>
-<li>使用<code>&amp;T</code> 而非 <code>&amp;Box&lt;T&gt;</code></li>
-</ul>
-<p>例如下方的<code>three_vowels2</code>可以更好的支援String以及str兩種型態</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">three_vowels</span></span>(word: &amp;<span class="built_in">String</span>) -&gt; <span class="built_in">bool</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">three_vowels2</span></span>(word: &amp;<span class="built_in">str</span>) -&gt; <span class="built_in">bool</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">  <span class="keyword">let</span> s = <span class="string">&quot;str&quot;</span>.to_string();</span><br><span class="line">  three_vowels(&amp;s);</span><br><span class="line">  <span class="comment">// not working three_vowels(&quot;string&quot;);</span></span><br><span class="line">  three_vowels2(&amp;s);</span><br><span class="line">  three_vowels2(<span class="string">&quot;string&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="2-2-Concatenating-strings-with-format"><a href="#2-2-Concatenating-strings-with-format" class="headerlink" title="2.2. Concatenating strings with format!"></a>2.2. Concatenating strings with format!</h2><p>使用<code>format!</code>來串接字串，而不是使用<code>push</code>, <code>push_str</code>, <code>+</code></p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">say_hello</span></span>(name: &amp;<span class="built_in">str</span>) -&gt; <span class="built_in">String</span> &#123;</span><br><span class="line">    <span class="comment">// We could construct the result string manually.</span></span><br><span class="line">    <span class="comment">// let mut result = &quot;Hello &quot;.to_owned();</span></span><br><span class="line">    <span class="comment">// result.push_str(name);</span></span><br><span class="line">    <span class="comment">// result.push(&#x27;!&#x27;);</span></span><br><span class="line">    <span class="comment">// result</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// But using format! is better.</span></span><br><span class="line">    <span class="built_in">format!</span>(<span class="string">&quot;Hello &#123;&#125;!&quot;</span>, name)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>優點: 方便、可讀性高</li>
-<li>缺點: <code>push</code>的效能比較好</li>
-</ul>
-<h2 id="2-3-Constructors"><a href="#2-3-Constructors" class="headerlink" title="2.3. Constructors"></a>2.3. Constructors</h2><p>Rust並沒有支援建構子，建議使用<code>new</code> function來實作。</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">MyObj</span></span> &#123;</span><br><span class="line">  n: <span class="built_in">i32</span>,</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">impl</span> MyObj &#123;</span><br><span class="line">  <span class="function"><span class="keyword">fn</span> <span class="title">new</span></span>() -&gt; <span class="keyword">Self</span> &#123;</span><br><span class="line">    <span class="keyword">Self</span> &#123;</span><br><span class="line">      n: <span class="number">0</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="2-4-The-Default-Trait"><a href="#2-4-The-Default-Trait" class="headerlink" title="2.4. The Default Trait"></a>2.4. The Default Trait</h2><ul>
-<li>實作Default Trait可以定義struct內各欄位的預設值</li>
-<li>實作Default Trait可以讓你的struct與其他的container和generic types合作的更好(如: Option::unwrap_or_default())。</li>
-<li>若是該struct所有的欄位都有實作<code>Default</code>，則可透過attribute讓struct直接支援default</li>
-</ul>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[derive(Default)]</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">SomeOptions</span></span> &#123;</span><br><span class="line">    foo: <span class="built_in">i32</span>,</span><br><span class="line">    bar: <span class="built_in">i32</span>,</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> o = SomeOptions::default();</span><br><span class="line">    <span class="built_in">assert_eq!</span>(o.foo, <span class="number">0</span>);</span><br><span class="line">    <span class="built_in">assert_eq!</span>(o.bar, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> o2 = SomeOptions &#123;</span><br><span class="line">      foo: <span class="number">1</span>,</span><br><span class="line">      ..<span class="built_in">Default</span>::default()</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="built_in">assert_eq!</span>(o2.foo, <span class="number">1</span>);</span><br><span class="line">    <span class="built_in">assert_eq!</span>(o2.bar, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="2-5-Collections-are-smart-pointers"><a href="#2-5-Collections-are-smart-pointers" class="headerlink" title="2.5. Collections are smart pointers"></a>2.5. Collections are smart pointers</h2><p>使用<code>Deref</code> trait 讓容器可以像smart pointer提供data的owning以及borrowed view</p>
-<ul>
-<li>優點: 大多數的method可以實作在borrowed view即可，因為能被owing view隱式轉換</li>
-</ul>
-<h2 id="2-6-Finalisation-in-Destructors"><a href="#2-6-Finalisation-in-Destructors" class="headerlink" title="2.6. Finalisation in Destructors"></a>2.6. Finalisation in Destructors</h2><p>Rust沒有提供<code>finally</code>區塊的語法，而是以物件解構的方式代替執行，方法是實作<code>Drop</code> trait。</p>
-<h2 id="2-7-mem-take-replace-to-keep-owned-values-in-changed-enums"><a href="#2-7-mem-take-replace-to-keep-owned-values-in-changed-enums" class="headerlink" title="2.7. mem::{take(), replace()} to keep owned values in changed enums"></a>2.7. mem::{take(<em>), replace(</em>)} to keep owned values in changed enums</h2><p>做變數替換時，為了滿足borrower checker又不濫用<code>clone()</code>，可使用<code>mem::take()</code>或<code>mem::replace()</code></p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::mem;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">MyEnum</span></span> &#123;</span><br><span class="line">    A &#123; name: <span class="built_in">String</span>, x: <span class="built_in">u8</span> &#125;,</span><br><span class="line">    B &#123; name: <span class="built_in">String</span> &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">a_to_b</span></span>(e: &amp;<span class="keyword">mut</span> MyEnum) &#123;</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">let</span> MyEnum::A &#123; name, x: <span class="number">0</span> &#125; = e &#123;</span><br><span class="line">        *e = MyEnum::B &#123; name: mem::take(name) &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<li>使用<code>&amp;T</code> 而非 <code>&amp;Box&lt;T&gt;</code>
+        
+          <p class="article-more-link">
+            <a href="/2021/11/07/rust-design-patterns-1/#more">Read More</a>
+          </p>
+        
       
     </div>
     <footer class="article-footer">
@@ -186,6 +208,10 @@
     <h3 class="widget-title">最新文章</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2021/11/08/rust-design-patterns-2/">Rust Design Pattern 讀後整理 - Idioms(下)</a>
+          </li>
         
           <li>
             <a href="/2021/11/07/rust-design-patterns-1/">Rust Design Pattern 讀後整理 - Idioms(上)</a>
