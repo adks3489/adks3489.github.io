@@ -1,0 +1,291 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Rust Design Pattern 讀後整理 - Anti-patterns | James Thinking Log</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="4. Anti-patterns4.1. Clone to satisfy the borrow checkerborrow checker的用意是避免開發者寫出unsafe的程式碼，不應該為了應付compiler而使用clone去滿足borrow check。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust Design Pattern 讀後整理 - Anti-patterns">
+<meta property="og:url" content="https://adks3489.github.io/2021/11/14/rust-design-patterns-5/index.html">
+<meta property="og:site_name" content="James Thinking Log">
+<meta property="og:description" content="4. Anti-patterns4.1. Clone to satisfy the borrow checkerborrow checker的用意是避免開發者寫出unsafe的程式碼，不應該為了應付compiler而使用clone去滿足borrow check。">
+<meta property="og:locale" content="zh_TW">
+<meta property="article:published_time" content="2021-11-14T05:01:59.000Z">
+<meta property="article:modified_time" content="2021-11-14T12:57:43.126Z">
+<meta property="article:author" content="James Chiang">
+<meta property="article:tag" content="rust">
+<meta property="article:tag" content="design pattern">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="James Thinking Log" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script><![endif]-->
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-0NB5ZTSTQS', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+<body>
+<div id="container">
+  <div id="wrap">
+    <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">
+          James Thinking Log
+        </a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">
+            Home
+          </a>
+          
+          <a class="main-nav-link" href="/archives">
+            Archives
+          </a>
+          
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+          
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜尋"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://adks3489.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+    <div class="outer">
+      <section id="main"><article id="post-rust-design-patterns-5" class="article article-type-post" itemscope
+  itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/11/14/rust-design-patterns-5/" class="article-date">
+  <time datetime="2021-11-14T05:01:59.000Z" itemprop="datePublished">2021-11-14</time>
+</a>
+      
+  </div>
+  <div class="article-inner">
+    
+      
+        <header class="article-header">
+          
+  
+    <h1 class="article-title" itemprop="name">
+      Rust Design Pattern 讀後整理 - Anti-patterns
+    </h1>
+  
+
+        </header>
+        
+          <div class="article-entry" itemprop="articleBody">
+            
+                      <h1 id="4-Anti-patterns"><a href="#4-Anti-patterns" class="headerlink" title="4. Anti-patterns"></a>4. Anti-patterns</h1><h2 id="4-1-Clone-to-satisfy-the-borrow-checker"><a href="#4-1-Clone-to-satisfy-the-borrow-checker" class="headerlink" title="4.1. Clone to satisfy the borrow checker"></a>4.1. Clone to satisfy the borrow checker</h2><p>borrow checker的用意是避免開發者寫出unsafe的程式碼，不應該為了應付compiler而使用clone去滿足borrow check。</p>
+<span id="more"></span>
+
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="keyword">mut</span> x = <span class="number">5</span>;</span><br><span class="line"><span class="keyword">let</span> y = &amp;<span class="keyword">mut</span> (x.clone());</span><br><span class="line">*y += <span class="number">1</span>;</span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, x); <span class="comment">// 如果沒有x.clone()，這邊會被擋下</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="4-2-deny-warnings"><a href="#4-2-deny-warnings" class="headerlink" title="4.2. #![deny(warnings)]"></a>4.2. #![deny(warnings)]</h2><p>立意良善的crate作者會確保他們的程式編譯會沒有警告產生。所以有些人會在crate root的地方加上:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#![deny(warnings)]</span></span><br></pre></td></tr></table></figure>
+
+<p>這樣寫很簡單而且會讓warning產生時中止編譯。<br>但是這種作法會讓crate失去Rust提供的穩定性，因為有時候新功能出現或舊的錯誤功能會透過warning產生提示。如果讓這種warning停止了編譯</p>
+<h3 id="替代方案"><a href="#替代方案" class="headerlink" title="替代方案"></a>替代方案</h3><ol>
+<li>將build setting跟程式碼分離，透過command line設定deny<br><code>RUSTFLAGS=&quot;-D warnings&quot; cargo build</code></li>
+<li>指定想要deny的warning清單，以下兩組都是合適的deny清單:<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[deny(bad-style,</span></span><br><span class="line"><span class="meta">   const-err,</span></span><br><span class="line"><span class="meta">   dead-code,</span></span><br><span class="line"><span class="meta">   improper-ctypes,</span></span><br><span class="line"><span class="meta">   non-shorthand-field-patterns,</span></span><br><span class="line"><span class="meta">   no-mangle-generic-items,</span></span><br><span class="line"><span class="meta">   overflowing-literals,</span></span><br><span class="line"><span class="meta">   path-statements ,</span></span><br><span class="line"><span class="meta">   patterns-in-fns-without-body,</span></span><br><span class="line"><span class="meta">   private-in-public,</span></span><br><span class="line"><span class="meta">   unconditional-recursion,</span></span><br><span class="line"><span class="meta">   unused,</span></span><br><span class="line"><span class="meta">   unused-allocation,</span></span><br><span class="line"><span class="meta">   unused-comparisons,</span></span><br><span class="line"><span class="meta">   unused-parens,</span></span><br><span class="line"><span class="meta">   while-true)]</span></span><br><span class="line"><span class="meta">#[deny(missing-debug-implementations,</span></span><br><span class="line"><span class="meta">   missing-docs,</span></span><br><span class="line"><span class="meta">   trivial-casts,</span></span><br><span class="line"><span class="meta">   trivial-numeric-casts,</span></span><br><span class="line"><span class="meta">   unused-extern-crates,</span></span><br><span class="line"><span class="meta">   unused-import-braces,</span></span><br><span class="line"><span class="meta">   unused-qualifications,</span></span><br><span class="line"><span class="meta">   unused-results)]</span></span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="4-3-Deref-Polymorphism"><a href="#4-3-Deref-Polymorphism" class="headerlink" title="4.3. Deref Polymorphism"></a>4.3. Deref Polymorphism</h2><p>濫用<code>Deref</code> trait來模擬struct之間的繼承，進而達到重用方法的效用。</p>
+<p>假設我們想要模仿OO語言如Java的這個情況:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">m</span><span class="params">()</span> </span>&#123; ... &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Bar</span> <span class="keyword">extends</span> <span class="title">Foo</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">    Bar b = <span class="keyword">new</span> Bar();</span><br><span class="line">    b.m();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在rust可以透過這種方法達成:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::ops::Deref;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Foo</span></span> &#123;&#125;</span><br><span class="line"><span class="keyword">impl</span> Foo &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">m</span></span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="comment">//..</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Bar</span></span> &#123;</span><br><span class="line">    f: Foo,</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">impl</span> Deref <span class="keyword">for</span> Bar &#123;</span><br><span class="line">    <span class="class"><span class="keyword">type</span> <span class="title">Target</span></span> = Foo;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">deref</span></span>(&amp;<span class="keyword">self</span>) -&gt; &amp;Foo &#123;</span><br><span class="line">        &amp;<span class="keyword">self</span>.f</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> b = Bar &#123; f: Foo &#123;&#125; &#125;;</span><br><span class="line">    b.m();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>為了要讓這方法成功，實作<code>Deref</code>而讓<code>Bar</code>的dereference回傳<code>Foo</code>會是很怪異的事情。在Rust沒有struct的繼承，一般是使用組合來代替。</p>
+
+                        
+          </div>
+          <footer class="article-footer">
+            <a data-url="https://adks3489.github.io/2021/11/14/rust-design-patterns-5/" data-id="ckvz8tyt40000mojqa5d02k9v" class="article-share-link">
+              分享到
+            </a>
+
+            
+              <a href="https://adks3489.github.io/2021/11/14/rust-design-patterns-5/#disqus_thread" class="article-comment-link">
+                回覆
+              </a>
+              
+
+                
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/design-pattern/" rel="tag">design pattern</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/rust/" rel="tag">rust</a></li></ul>
+
+          </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2021/11/13/rust-design-patterns-4/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">上一篇</strong>
+      <div class="article-nav-title">Rust Design Pattern 讀後整理 - Design Patterns(下)</div>
+    </a>
+  
+</nav>
+
+      
+</article>
+
+
+    <section id="comments">
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by
+            Disqus.</a></noscript>
+      </div>
+    </section>
+    </section>
+      
+      <aside id="sidebar">
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/design-pattern/" rel="tag">design pattern</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/rust/" rel="tag">rust</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/design-pattern/" style="font-size: 10px;">design pattern</a> <a href="/tags/rust/" style="font-size: 10px;">rust</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a><span class="archive-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">近期文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/11/14/rust-design-patterns-5/">Rust Design Pattern 讀後整理 - Anti-patterns</a>
+          </li>
+        
+          <li>
+            <a href="/2021/11/13/rust-design-patterns-4/">Rust Design Pattern 讀後整理 - Design Patterns(下)</a>
+          </li>
+        
+          <li>
+            <a href="/2021/11/11/rust-design-patterns-3/">Rust Design Pattern 讀後整理 - Design Patterns(上)</a>
+          </li>
+        
+          <li>
+            <a href="/2021/11/08/rust-design-patterns-2/">Rust Design Pattern 讀後整理 - Idioms(下)</a>
+          </li>
+        
+          <li>
+            <a href="/2021/11/07/rust-design-patterns-1/">Rust Design Pattern 讀後整理 - Idioms(上)</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+      
+    </div>
+    <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 James Chiang<br>
+      Powered by <a href="//hexo.io/" target="_blank">Hexo</a>
+      .
+      Theme by <a href="https://github.com/xiangming/landscape-plus" target="_blank">Landscape-plus</a>
+    </div>
+  </div>
+</footer>
+  </div>
+  <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+  <!-- totop start -->
+<div id="totop">
+<a title="返回頂部"><img src="/img/scrollup.png"/></a>
+</div>
+
+<!-- totop end -->
+
+<script>
+  var disqus_shortname = 'james-thinking-log';
+  
+  var disqus_url = 'https://adks3489.github.io/2021/11/14/rust-design-patterns-5/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+</div>
+</body>
+</html>
