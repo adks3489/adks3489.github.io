@@ -1,0 +1,306 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Rust Design Pattern 讀後整理 - Design Patterns(下) | James Thinking Log</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="3. Design Patterns3.3. Structural了解Entity之間的關係來簡化設計。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust Design Pattern 讀後整理 - Design Patterns(下)">
+<meta property="og:url" content="https://adks3489.github.io/2021/11/13/rust-design-patterns-4/index.html">
+<meta property="og:site_name" content="James Thinking Log">
+<meta property="og:description" content="3. Design Patterns3.3. Structural了解Entity之間的關係來簡化設計。">
+<meta property="og:locale" content="zh_TW">
+<meta property="article:published_time" content="2021-11-13T04:47:26.000Z">
+<meta property="article:modified_time" content="2021-11-14T05:00:04.073Z">
+<meta property="article:author" content="James Chiang">
+<meta property="article:tag" content="rust">
+<meta property="article:tag" content="design pattern">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="James Thinking Log" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script><![endif]-->
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-0NB5ZTSTQS', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+<body>
+<div id="container">
+  <div id="wrap">
+    <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">
+          James Thinking Log
+        </a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">
+            Home
+          </a>
+          
+          <a class="main-nav-link" href="/archives">
+            Archives
+          </a>
+          
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+          
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜尋"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://adks3489.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+    <div class="outer">
+      <section id="main"><article id="post-rust-design-patterns-4" class="article article-type-post" itemscope
+  itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/11/13/rust-design-patterns-4/" class="article-date">
+  <time datetime="2021-11-13T04:47:26.000Z" itemprop="datePublished">2021-11-13</time>
+</a>
+      
+  </div>
+  <div class="article-inner">
+    
+      
+        <header class="article-header">
+          
+  
+    <h1 class="article-title" itemprop="name">
+      Rust Design Pattern 讀後整理 - Design Patterns(下)
+    </h1>
+  
+
+        </header>
+        
+          <div class="article-entry" itemprop="articleBody">
+            
+                      <h1 id="3-Design-Patterns"><a href="#3-Design-Patterns" class="headerlink" title="3. Design Patterns"></a>3. Design Patterns</h1><h2 id="3-3-Structural"><a href="#3-3-Structural" class="headerlink" title="3.3. Structural"></a>3.3. Structural</h2><p>了解Entity之間的關係來簡化設計。</p>
+<span id="more"></span>
+<h3 id="3-3-1-Compose-structs-together-for-better-borrowing"><a href="#3-3-1-Compose-structs-together-for-better-borrowing" class="headerlink" title="3.3.1. Compose structs together for better borrowing"></a>3.3.1. Compose structs together for better borrowing</h3><p>有些時候較大的struct使用上會受到borrow checker的干擾，雖然欄位可以被單獨借用，但有時候也會變成整個struct被限制。解決的方法是將struct拆成幾個較小的strcut，然後再將他們組合起來成原來的struct，這樣一來每個小struct都可以被個別借用，增進彈性。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">A</span></span> &#123;</span><br><span class="line">    f1: <span class="built_in">u32</span>,</span><br><span class="line">    f2: <span class="built_in">u32</span>,</span><br><span class="line">    f3: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">foo</span></span>(a: &amp;<span class="keyword">mut</span> A) -&gt; &amp;<span class="built_in">u32</span> &#123; &amp;a.f2 &#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">bar</span></span>(a: &amp;<span class="keyword">mut</span> A) -&gt; <span class="built_in">u32</span> &#123; a.f1 + a.f3 &#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">baz</span></span>(a: &amp;<span class="keyword">mut</span> A) &#123;</span><br><span class="line">    <span class="comment">// 這邊借用了整個a</span></span><br><span class="line">    <span class="keyword">let</span> x = foo(a);</span><br><span class="line">    <span class="comment">// Borrow checker error: 因為a被x拿走了，這邊不能再借一次</span></span><br><span class="line">    <span class="keyword">let</span> y = bar(a);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, x);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>將<code>struct A</code>拆成<code>struct B</code>和<code>struct C</code>，然後就可以單獨借用B, C</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">A</span></span> &#123;</span><br><span class="line">    b: B,</span><br><span class="line">    c: C,</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">B</span></span> &#123;</span><br><span class="line">    f2: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">C</span></span> &#123;</span><br><span class="line">    f1: <span class="built_in">u32</span>,</span><br><span class="line">    f3: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">foo</span></span>(b: &amp;<span class="keyword">mut</span> B) -&gt; &amp;<span class="built_in">u32</span> &#123; &amp;b.f2 &#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">bar</span></span>(c: &amp;<span class="keyword">mut</span> C) -&gt; <span class="built_in">u32</span> &#123; c.f1 + c.f3 &#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">baz</span></span>(a: &amp;<span class="keyword">mut</span> A) &#123;</span><br><span class="line">    <span class="keyword">let</span> x = foo(&amp;<span class="keyword">mut</span> a.b);</span><br><span class="line">    <span class="keyword">let</span> y = bar(&amp;<span class="keyword">mut</span> a.c);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, x);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-3-2-Prefer-Small-Crates"><a href="#3-3-2-Prefer-Small-Crates" class="headerlink" title="3.3.2. Prefer Small Crates"></a>3.3.2. Prefer Small Crates</h3><p>偏好只將一件事做好的小型crate。</p>
+<h4 id="優點"><a href="#優點" class="headerlink" title="優點"></a>優點</h4><ul>
+<li>小型crate較容易讓人理解，也能讓程式碼較具模組化</li>
+<li>更容易讓不同專案重複使用</li>
+<li>Rust編譯的最小單元是crate，拆分專案成不同的crate有助於平行編譯</li>
+</ul>
+<h4 id="缺點"><a href="#缺點" class="headerlink" title="缺點"></a>缺點</h4><ul>
+<li>當專案依賴不同衝突版本時，可能導致”dependency hell”</li>
+<li>crates.io上的專案不一定品質都好</li>
+<li>兩個小型crate在最佳化上可能不如一個大的，因為compiler預設無法做link-time optimization(LTO)</li>
+</ul>
+<h3 id="3-3-3-Contain-unsafety-in-small-modules"><a href="#3-3-3-Contain-unsafety-in-small-modules" class="headerlink" title="3.3.3. Contain unsafety in small modules"></a>3.3.3. Contain unsafety in small modules</h3><p>如果有<code>unsafe</code>的程式碼，可以將他們包裝成盡可能小的模組，再配上一個安全的介面。</p>
+<h4 id="優點-1"><a href="#優點-1" class="headerlink" title="優點"></a>優點</h4><ul>
+<li>可以將<code>unsafe</code>的程式碼限制</li>
+<li>寫外圍模組會比較簡單，因為可以依賴較有保證的內部模組</li>
+</ul>
+<h4 id="缺點-1"><a href="#缺點-1" class="headerlink" title="缺點"></a>缺點</h4><ul>
+<li>有時候不易找到適合的介面</li>
+<li>這種抽象可能導致效率較差</li>
+</ul>
+<h2 id="3-4-Foreign-function-interface-FFI"><a href="#3-4-Foreign-function-interface-FFI" class="headerlink" title="3.4. Foreign function interface (FFI)"></a>3.4. Foreign function interface (FFI)</h2><h3 id="3-4-1-Object-Based-APIs"><a href="#3-4-1-Object-Based-APIs" class="headerlink" title="3.4.1. Object-Based APIs"></a>3.4.1. Object-Based APIs</h3><p>當設計輸出給其他語言的API時，有幾點設計原則與一般的Rust API不同: </p>
+<ol>
+<li>所有封裝的類型必須保持Rust擁有，由user管理並且不透明</li>
+<li>所有Transactional的資料類型應該由user擁有，並且透明</li>
+<li>所有library的行為應是function作用在封裝的類型上</li>
+<li>所有library的行為應被封裝成不基於struct上的類型，而是基於provenance/lifetime</li>
+</ol>
+<h4 id="範例-C語言-object-based-API"><a href="#範例-C語言-object-based-API" class="headerlink" title="範例: C語言 object-based API"></a>範例: C語言 object-based API</h4><ul>
+<li><code>DBM</code>即為被封裝的類型，對user來說是不透明的，只能透過<code>dbm_open</code>來建立。並且透過<code>dbm_close</code>來管理生命週期。</li>
+<li><code>datum</code>屬於Transactional的資料<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">DBM</span>;</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span> <span class="keyword">void</span> *dptr, <span class="keyword">size_t</span> dsize &#125; datum;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span>     <span class="title">dbm_clearerr</span><span class="params">(DBM *)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span>    <span class="title">dbm_close</span><span class="params">(DBM *)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span>     <span class="title">dbm_delete</span><span class="params">(DBM *, datum)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span>     <span class="title">dbm_error</span><span class="params">(DBM *)</span></span>;</span><br><span class="line"><span class="function">datum   <span class="title">dbm_fetch</span><span class="params">(DBM *, datum)</span></span>;</span><br><span class="line"><span class="function">datum   <span class="title">dbm_firstkey</span><span class="params">(DBM *)</span></span>;</span><br><span class="line"><span class="function">datum   <span class="title">dbm_nextkey</span><span class="params">(DBM *)</span></span>;</span><br><span class="line"><span class="function">DBM    *<span class="title">dbm_open</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *, <span class="keyword">int</span>, <span class="keyword">mode_t</span>)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span>     <span class="title">dbm_store</span><span class="params">(DBM *, datum, datum, <span class="keyword">int</span>)</span></span>;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="3-4-2-Type-Consolidation-into-Wrappers"><a href="#3-4-2-Type-Consolidation-into-Wrappers" class="headerlink" title="3.4.2. Type Consolidation into Wrappers"></a>3.4.2. Type Consolidation into Wrappers</h3><p>這模式能讓人優雅的處理多個關聯的類型，同時最小化memory unsafey的區域。<br>Rust輸出給其他語言時一般會轉為pointer，也代表著由user管理生命週期。為了降低風險，會使用”consolidated wrapper”，將可能的操作合併到一個wrapper type。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">MySetWrapper</span></span> &#123;</span><br><span class="line">    myset: MySet,</span><br><span class="line">    iter_next: <span class="built_in">usize</span>,</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">impl</span> MySetWrapper &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">first_key</span></span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) -&gt; <span class="built_in">Option</span>&lt;&amp;Key&gt; &#123;</span><br><span class="line">        <span class="keyword">self</span>.iter_next = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">self</span>.next_key()</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">next_key</span></span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) -&gt; <span class="built_in">Option</span>&lt;&amp;Key&gt; &#123;</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">let</span> <span class="literal">Some</span>(next) = <span class="keyword">self</span>.myset.keys().nth(<span class="keyword">self</span>.iter_next) &#123;</span><br><span class="line">            <span class="keyword">self</span>.iter_next += <span class="number">1</span>;</span><br><span class="line">            <span class="literal">Some</span>(next)</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="literal">None</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+                        
+          </div>
+          <footer class="article-footer">
+            <a data-url="https://adks3489.github.io/2021/11/13/rust-design-patterns-4/" data-id="ckvyrrsqp00007cjq7n1i636u" class="article-share-link">
+              分享到
+            </a>
+
+            
+              <a href="https://adks3489.github.io/2021/11/13/rust-design-patterns-4/#disqus_thread" class="article-comment-link">
+                回覆
+              </a>
+              
+
+                
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/design-pattern/" rel="tag">design pattern</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/rust/" rel="tag">rust</a></li></ul>
+
+          </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2021/11/11/rust-design-patterns-3/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">上一篇</strong>
+      <div class="article-nav-title">Rust Design Pattern 讀後整理 - Design Patterns(上)</div>
+    </a>
+  
+</nav>
+
+      
+</article>
+
+
+    <section id="comments">
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by
+            Disqus.</a></noscript>
+      </div>
+    </section>
+    </section>
+      
+      <aside id="sidebar">
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/design-pattern/" rel="tag">design pattern</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/rust/" rel="tag">rust</a><span class="tag-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/design-pattern/" style="font-size: 10px;">design pattern</a> <a href="/tags/rust/" style="font-size: 10px;">rust</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">近期文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/11/13/rust-design-patterns-4/">Rust Design Pattern 讀後整理 - Design Patterns(下)</a>
+          </li>
+        
+          <li>
+            <a href="/2021/11/11/rust-design-patterns-3/">Rust Design Pattern 讀後整理 - Design Patterns(上)</a>
+          </li>
+        
+          <li>
+            <a href="/2021/11/08/rust-design-patterns-2/">Rust Design Pattern 讀後整理 - Idioms(下)</a>
+          </li>
+        
+          <li>
+            <a href="/2021/11/07/rust-design-patterns-1/">Rust Design Pattern 讀後整理 - Idioms(上)</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+      
+    </div>
+    <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 James Chiang<br>
+      Powered by <a href="//hexo.io/" target="_blank">Hexo</a>
+      .
+      Theme by <a href="https://github.com/xiangming/landscape-plus" target="_blank">Landscape-plus</a>
+    </div>
+  </div>
+</footer>
+  </div>
+  <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+  <!-- totop start -->
+<div id="totop">
+<a title="返回頂部"><img src="/img/scrollup.png"/></a>
+</div>
+
+<!-- totop end -->
+
+<script>
+  var disqus_shortname = 'james-thinking-log';
+  
+  var disqus_url = 'https://adks3489.github.io/2021/11/13/rust-design-patterns-4/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+</div>
+</body>
+</html>
